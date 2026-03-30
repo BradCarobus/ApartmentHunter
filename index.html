@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDnmVEBSCkQf7E_pd4K9u9k1SH_6j3BdmQ",
@@ -20,6 +21,7 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const storage = firebase.storage();
 </script>
 <style>
   :root {
@@ -155,6 +157,53 @@
     flex-shrink: 0;
   }
   .apt-photos img:first-child { border-radius: 0; }
+
+  .photo-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.85rem;
+    transition: border-color 0.2s, background 0.2s;
+    margin-top: 8px;
+  }
+  .photo-upload-area:hover { border-color: var(--gold); background: var(--cream); }
+  .photo-previews {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .photo-thumb {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+  .photo-thumb img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .photo-thumb-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--rust);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.65rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .apt-card-header {
     padding: 16px 18px 12px;
@@ -673,6 +722,16 @@ if(sessionStorage.getItem("chi-unlocked")==="1"){document.getElementById("lock-s
         </div>
       </div>
 
+      <!-- PHOTOS -->
+      <div class="field-group">
+        <label class="field-label">Photos</label>
+        <div class="photo-previews" id="modal-photo-previews"></div>
+        <div class="photo-upload-area" onclick="document.getElementById('f-photos').click()">
+          + Click to add photos
+        </div>
+        <input type="file" id="f-photos" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this.files)">
+      </div>
+
       <!-- NOTES -->
       <div class="field-group">
         <label class="field-label">Notes & Thoughts</label>
@@ -691,6 +750,39 @@ let editingId = null;
 let currentTab = 'list';
 let currentFilter = 'all';
 let scores = { price: 0, location: 0, parking: 0, space: 0, vibe: 0 };
+let currentImages = []; // existing image URLs shown in modal
+let pendingFiles = [];  // new File objects waiting to be uploaded
+
+// ---- PHOTO MANAGEMENT ----
+function handlePhotoSelect(files) {
+  pendingFiles = [...pendingFiles, ...Array.from(files)];
+  document.getElementById('f-photos').value = '';
+  renderModalPhotos();
+}
+
+function removeModalPhoto(index, isExisting) {
+  if (isExisting) currentImages.splice(index, 1);
+  else pendingFiles.splice(index, 1);
+  renderModalPhotos();
+}
+
+function renderModalPhotos() {
+  const container = document.getElementById('modal-photo-previews');
+  const existingHTML = currentImages.map((url, i) =>
+    `<div class="photo-thumb">
+      <img src="${url}" alt="">
+      <button class="photo-thumb-remove" onclick="removeModalPhoto(${i}, true)">✕</button>
+    </div>`
+  ).join('');
+  const pendingHTML = pendingFiles.map((file, i) => {
+    const objUrl = URL.createObjectURL(file);
+    return `<div class="photo-thumb">
+      <img src="${objUrl}" alt="">
+      <button class="photo-thumb-remove" onclick="removeModalPhoto(${i}, false)">✕</button>
+    </div>`;
+  }).join('');
+  container.innerHTML = existingHTML + pendingHTML;
+}
 
 // ---- STAR RATINGS ----
 function buildStars() {
@@ -746,6 +838,8 @@ function openModal(id = null) {
     document.getElementById('f-notes').value = apt.notes || '';
     scores = {...(apt.scores || scores)};
     ['price','location','parking','space','vibe'].forEach(c => renderStars(c, scores[c]));
+    currentImages = [...(apt.images || [])];
+    pendingFiles = [];
   } else {
     document.getElementById('modal-title').textContent = 'Add Apartment';
     ['f-url','f-name','f-hood','f-price','f-sqft','f-bedbath','f-parking','f-notes'].forEach(id => {
@@ -753,7 +847,10 @@ function openModal(id = null) {
     });
     document.getElementById('f-status').value = 'considering';
     document.getElementById('fetch-status').textContent = '';
+    currentImages = [];
+    pendingFiles = [];
   }
+  renderModalPhotos();
   document.getElementById('modal-overlay').classList.add('open');
   loadApiKey();
 }
@@ -840,7 +937,10 @@ For images, extract up to 3 direct photo URLs from the listing (the actual image
     if (info.sqft) document.getElementById('f-sqft').value = info.sqft;
     if (info.bedbath) document.getElementById('f-bedbath').value = info.bedbath;
     if (info.parking) document.getElementById('f-parking').value = info.parking;
-    if (info.images && info.images.length) window._fetchedImages = info.images;
+    if (info.images && info.images.length) {
+      currentImages = [...currentImages, ...info.images];
+      renderModalPhotos();
+    }
 
     document.getElementById('fetch-status').innerHTML = '<div class="fetch-success">✓ Details pulled in! Review and adjust as needed.</div>';
   } catch (err) {
@@ -856,9 +956,32 @@ function clearFetchStatus() {
 }
 
 // ---- SAVE ----
-function saveApartment() {
+async function saveApartment() {
   const name = document.getElementById('f-name').value.trim();
   if (!name) { alert('Please give this apartment a name.'); return; }
+
+  const saveBtn = document.querySelector('.save-btn');
+
+  let uploadedUrls = [];
+  if (pendingFiles.length > 0) {
+    saveBtn.textContent = 'Uploading photos…';
+    saveBtn.disabled = true;
+    try {
+      for (const file of pendingFiles) {
+        const ref = storage.ref(`apartments/${Date.now()}_${file.name}`);
+        await ref.put(file);
+        uploadedUrls.push(await ref.getDownloadURL());
+      }
+    } catch (e) {
+      console.error('Upload failed', e);
+      alert('Photo upload failed. Make sure Firebase Storage is enabled in your Firebase console (Build → Storage).');
+      saveBtn.textContent = 'Save Apartment';
+      saveBtn.disabled = false;
+      return;
+    }
+    saveBtn.textContent = 'Save Apartment';
+    saveBtn.disabled = false;
+  }
 
   const apt = {
     id: editingId !== null ? editingId : Date.now(),
@@ -872,10 +995,9 @@ function saveApartment() {
     status: document.getElementById('f-status').value,
     notes: document.getElementById('f-notes').value.trim(),
     scores: {...scores},
-    images: editingId !== null ? (apartments.find(a=>a.id===editingId).images || []) : (window._fetchedImages || []),
+    images: [...currentImages, ...uploadedUrls],
     added: editingId !== null ? apartments.find(a=>a.id===editingId).added : new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})
   };
-  window._fetchedImages = null;
 
   if (editingId !== null) {
     apartments = apartments.map(a => a.id === editingId ? apt : a);
