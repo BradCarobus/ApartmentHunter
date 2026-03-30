@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Chicago Apartment Hunt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #faf8f4;
+    --cream: #f2ede4;
+    --rust: #c0392b;
+    --gold: #d4a843;
+    --sage: #5a7a6a;
+    --muted: #8a8a9a;
+    --border: #e0d9ce;
+    --card: #ffffff;
+    --shadow: 0 2px 20px rgba(26,26,46,0.08);
+    --shadow-lg: 0 8px 40px rgba(26,26,46,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    line-height: 1.2;
+  }
+  .header-title span { color: var(--gold); }
+  .header-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .add-btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .add-btn:hover { background: #e8b94d; transform: scale(1.03); }
+
+  /* NAV TABS */
+  .tab-bar {
+    display: flex;
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 12px 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--rust); }
+
+  /* MAIN CONTENT */
+  main { padding: 20px 16px 100px; max-width: 700px; margin: 0 auto; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+  .empty-state h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  /* APARTMENT CARD */
+  .apt-card {
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .apt-card:hover { box-shadow: var(--shadow-lg); }
+
+  .apt-card-header {
+    padding: 16px 18px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .apt-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    line-height: 1.3;
+    flex: 1;
+  }
+  .apt-status-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .badge-considering { background: #fff3cd; color: #856404; }
+  .badge-favorite { background: #d4edda; color: #155724; }
+  .badge-eliminated { background: #f8d7da; color: #721c24; }
+
+  .apt-meta {
+    padding: 12px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .meta-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .meta-value { font-size: 0.9rem; font-weight: 500; }
+  .meta-value.price { color: var(--rust); font-weight: 700; font-size: 1rem; }
+
+  .apt-scores {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .scores-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .score-label { font-size: 0.78rem; width: 80px; flex-shrink: 0; color: var(--ink); }
+  .score-bar-bg { flex: 1; height: 6px; background: var(--cream); border-radius: 4px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .score-num { font-size: 0.75rem; font-weight: 700; width: 24px; text-align: right; flex-shrink: 0; }
+  .total-score { font-size: 0.8rem; font-weight: 700; color: var(--sage); margin-top: 6px; }
+
+  .apt-notes {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .notes-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .notes-text { font-size: 0.85rem; color: var(--ink); line-height: 1.55; white-space: pre-wrap; }
+  .notes-empty { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+
+  .apt-actions {
+    padding: 10px 18px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+  }
+  .action-btn:hover { background: var(--cream); }
+  .action-btn.danger { border-color: #f8d7da; color: var(--rust); }
+  .action-btn.danger:hover { background: #fff5f5; }
+  .action-btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .action-btn.primary:hover { background: #2d2d4a; }
+
+  /* COMPARE VIEW */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .compare-select-card {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 20px 14px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.8rem;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+  .compare-select-card:hover { border-color: var(--gold); }
+  .compare-select-card .icon { font-size: 1.8rem; }
+
+  .compare-table-wrap { margin-top: 20px; }
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+  }
+  .compare-table td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .compare-table tr:nth-child(even) td { background: var(--cream); }
+  .winner { color: var(--sage); font-weight: 700; }
+  .compare-apt-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    padding: 8px 12px 6px;
+    background: var(--cream);
+    border-bottom: 2px solid var(--gold);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,26,46,0.6);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 0 0 40px;
+    transform: translateY(60px);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+  .modal-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+  }
+  .modal-close {
+    background: var(--cream);
+    border: none;
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink);
+  }
+
+  .modal-body { padding: 18px 22px; }
+  .field-group { margin-bottom: 18px; }
+  .field-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input[type=text], input[type=number], input[type=url], input[type=password], textarea, select {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+  textarea { min-height: 90px; resize: vertical; }
+
+  .url-row { display: flex; gap: 8px; }
+  .url-row input { flex: 1; }
+  .fetch-btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .fetch-btn:hover { background: #2d2d4a; }
+  .fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .fetching-msg {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 6px;
+  }
+  .fetch-success {
+    font-size: 0.78rem;
+    color: var(--sage);
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  .score-field { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .score-input-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .score-input-label { font-size: 0.72rem; color: var(--ink); font-weight: 500; }
+  .star-row { display: flex; gap: 4px; }
+  .star {
+    font-size: 1.3rem;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.15s, transform 0.1s;
+    user-select: none;
+  }
+  .star.lit { opacity: 1; }
+  .star:hover { transform: scale(1.2); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .save-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--rust);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+  }
+  .save-btn:hover { background: #a93226; }
+
+  /* COMPARE SELECT */
+  .compare-picker {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .compare-picker label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .compare-picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .filter-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .zillow-link {
+    font-size: 0.72rem;
+    color: var(--gold);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+  }
+  .zillow-link:hover { text-decoration: underline; }
+
+  .img-thumb {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-color-1 { background: var(--rust); }
+  .score-color-2 { background: var(--gold); }
+  .score-color-3 { background: var(--sage); }
+  .score-color-4 { background: #5b86c4; }
+  .score-color-5 { background: #9b59b6; }
+
+  .no-compare { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 30px 0; font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen" style="position:fixed;inset:0;z-index:999;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;font-family:DM Sans,sans-serif;">
+  <div style="text-align:center;max-width:320px;width:100%">
+    <div style="font-size:2.8rem;margin-bottom:12px">&#127961;</div>
+    <div style="font-family:DM Serif Display,serif;font-size:1.8rem;color:#faf8f4;margin-bottom:4px">Our Chicago Hunt</div>
+    <div style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:#8a8a9a;margin-bottom:36px">Private &#8212; Enter Password</div>
+    <input id="lock-input" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()" style="width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid #2d2d4a;background:#0f0f1e;color:#faf8f4;font-size:1rem;outline:none;margin-bottom:10px;text-align:center;letter-spacing:0.1em;">
+    <div id="lock-error" style="height:18px;font-size:0.78rem;color:#c0392b;margin-bottom:10px;"></div>
+    <button onclick="unlock()" style="width:100%;padding:14px;background:#d4a843;color:#1a1a2e;border:none;border-radius:12px;font-size:1.05rem;cursor:pointer;">Unlock &#8594;</button>
+  </div>
+</div>
+<script>
+async function sha256(str){const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");}
+async function unlock(){const val=document.getElementById("lock-input").value;const hash=await sha256(val);if(hash==="b236b3917f06dd881d6dac645695d9567e0f4e87220770b1cb6254336663a38a"){sessionStorage.setItem("chi-unlocked","1");document.getElementById("lock-screen").style.display="none";}else{const err=document.getElementById("lock-error");err.textContent="Incorrect password";document.getElementById("lock-input").value="";setTimeout(()=>err.textContent="",2500);}}
+if(sessionStorage.getItem("chi-unlocked")==="1"){document.getElementById("lock-screen").style.display="none";}
+</script>
+
+<header>
+  <div>
+    <div class="header-title">Our <span>Chicago</span> Hunt</div>
+    <div class="header-sub">✨ Moving June 2025</div>
+  </div>
+  <button class="add-btn" onclick="openModal()">+ Add Apartment</button>
+</header>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('list', this)">All Apartments</div>
+  <div class="tab" onclick="switchTab('favorites', this)">⭐ Favorites</div>
+  <div class="tab" onclick="switchTab('compare', this)">Compare</div>
+</div>
+
+<main>
+  <div id="view-list">
+    <div class="filter-bar">
+      <div class="filter-chip active" onclick="setFilter('all', this)">All</div>
+      <div class="filter-chip" onclick="setFilter('considering', this)">Considering</div>
+      <div class="filter-chip" onclick="setFilter('favorite', this)">Favorites</div>
+      <div class="filter-chip" onclick="setFilter('eliminated', this)">Eliminated</div>
+    </div>
+    <div id="apt-list"></div>
+    <div class="empty-state" id="empty-state" style="display:none">
+      <div class="icon">🏙️</div>
+      <h3>No apartments yet</h3>
+      <p>Tap <strong>+ Add Apartment</strong> to start tracking your options. Paste a Zillow link and we'll pull in the details.</p>
+    </div>
+  </div>
+
+  <div id="view-favorites" style="display:none">
+    <div id="fav-list"></div>
+    <div class="empty-state" id="fav-empty" style="display:none">
+      <div class="icon">💛</div>
+      <h3>No favorites yet</h3>
+      <p>Mark apartments as <strong>Favorite</strong> to see them here.</p>
+    </div>
+  </div>
+
+  <div id="view-compare" style="display:none">
+    <div class="compare-picker">
+      <label>Pick two apartments to compare</label>
+      <div class="compare-picker-row">
+        <select id="compare-a" onchange="renderCompare()">
+          <option value="">Select first...</option>
+        </select>
+        <select id="compare-b" onchange="renderCompare()">
+          <option value="">Select second...</option>
+        </select>
+      </div>
+    </div>
+    <div id="compare-output"></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="overlayClose(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Apartment</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- ZILLOW URL -->
+      <div class="field-group">
+        <label class="field-label">Zillow / Listing URL</label>
+        <div class="url-row">
+          <input type="url" id="f-url" placeholder="https://www.zillow.com/homedetails/..." oninput="clearFetchStatus()">
+          <button class="fetch-btn" id="fetch-btn" onclick="fetchListing()">Auto-fill ✦</button>
+        </div>
+        <div id="fetch-status"></div>
+      </div>
+
+      <!-- API KEY -->
+      <div class="field-group" id="api-key-group">
+        <label class="field-label">Anthropic API Key <span style="color:var(--rust)">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— required for Auto-fill</span></label>
+        <div class="url-row">
+          <input type="password" id="f-apikey" placeholder="sk-ant-..." value="">
+          <button class="fetch-btn" onclick="saveApiKey()" style="background:var(--sage)">Save</button>
+        </div>
+        <div id="apikey-status" style="font-size:0.75rem;margin-top:5px;color:var(--muted)">Stored locally in your browser only. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--gold)">Get a key →</a></div>
+      </div>
+
+      <!-- NAME + NEIGHBORHOOD -->
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Apartment Name / Nickname</label>
+          <input type="text" id="f-name" placeholder="e.g. Printer's Row Studio">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Neighborhood</label>
+          <input type="text" id="f-hood" placeholder="e.g. Logan Square">
+        </div>
+      </div>
+
+      <!-- PRICE + SIZE -->
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Rent / Month ($)</label>
+          <input type="number" id="f-price" placeholder="2100">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Sq Ft</label>
+          <input type="number" id="f-sqft" placeholder="750">
+        </div>
+      </div>
+
+      <!-- BEDS/BATHS + PARKING -->
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Beds / Baths</label>
+          <input type="text" id="f-bedbath" placeholder="1 bed / 1 bath">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Parking (# of spots)</label>
+          <input type="text" id="f-parking" placeholder="2 spots, $150/mo">
+        </div>
+      </div>
+
+      <!-- STATUS -->
+      <div class="field-group">
+        <label class="field-label">Status</label>
+        <select id="f-status">
+          <option value="considering">Considering</option>
+          <option value="favorite">⭐ Favorite</option>
+          <option value="eliminated">Eliminated</option>
+        </select>
+      </div>
+
+      <!-- SCORES -->
+      <div class="field-group">
+        <label class="field-label">Rate This Place (1–5)</label>
+        <div class="score-field">
+          <div class="score-input-wrap">
+            <div class="score-input-label">💰 Price Value</div>
+            <div class="star-row" id="stars-price"></div>
+          </div>
+          <div class="score-input-wrap">
+            <div class="score-input-label">📍 Location</div>
+            <div class="star-row" id="stars-location"></div>
+          </div>
+          <div class="score-input-wrap">
+            <div class="score-input-label">🚗 Parking</div>
+            <div class="star-row" id="stars-parking"></div>
+          </div>
+          <div class="score-input-wrap">
+            <div class="score-input-label">🏠 Space / Layout</div>
+            <div class="star-row" id="stars-space"></div>
+          </div>
+          <div class="score-input-wrap">
+            <div class="score-input-label">✨ Vibe</div>
+            <div class="star-row" id="stars-vibe"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="field-group">
+        <label class="field-label">Notes & Thoughts</label>
+        <textarea id="f-notes" placeholder="Any notes about this place — things you loved, things that worried you, questions to ask the landlord..."></textarea>
+      </div>
+
+      <button class="save-btn" onclick="saveApartment()">Save Apartment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- STATE ----
+let apartments = JSON.parse(localStorage.getItem('chi-apts') || '[]');
+let editingId = null;
+let currentTab = 'list';
+let currentFilter = 'all';
+let scores = { price: 0, location: 0, parking: 0, space: 0, vibe: 0 };
+
+// ---- STAR RATINGS ----
+function buildStars() {
+  ['price','location','parking','space','vibe'].forEach(cat => {
+    const row = document.getElementById('stars-' + cat);
+    row.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      s.textContent = '★';
+      s.dataset.val = i;
+      s.dataset.cat = cat;
+      s.addEventListener('click', () => setScore(cat, i));
+      s.addEventListener('mouseenter', () => previewStars(cat, i));
+      s.addEventListener('mouseleave', () => renderStars(cat, scores[cat]));
+      row.appendChild(s);
+    }
+    renderStars(cat, 0);
+  });
+}
+function setScore(cat, val) {
+  scores[cat] = val;
+  renderStars(cat, val);
+}
+function renderStars(cat, val) {
+  document.querySelectorAll(`#stars-${cat} .star`).forEach(s => {
+    s.classList.toggle('lit', +s.dataset.val <= val);
+  });
+}
+function previewStars(cat, val) {
+  document.querySelectorAll(`#stars-${cat} .star`).forEach(s => {
+    s.classList.toggle('lit', +s.dataset.val <= val);
+  });
+}
+
+// ---- MODAL ----
+function openModal(id = null) {
+  editingId = id;
+  scores = { price: 0, location: 0, parking: 0, space: 0, vibe: 0 };
+  buildStars();
+
+  if (id !== null) {
+    const apt = apartments.find(a => a.id === id);
+    document.getElementById('modal-title').textContent = 'Edit Apartment';
+    document.getElementById('f-url').value = apt.url || '';
+    document.getElementById('f-name').value = apt.name || '';
+    document.getElementById('f-hood').value = apt.hood || '';
+    document.getElementById('f-price').value = apt.price || '';
+    document.getElementById('f-sqft').value = apt.sqft || '';
+    document.getElementById('f-bedbath').value = apt.bedbath || '';
+    document.getElementById('f-parking').value = apt.parking || '';
+    document.getElementById('f-status').value = apt.status || 'considering';
+    document.getElementById('f-notes').value = apt.notes || '';
+    scores = {...(apt.scores || scores)};
+    ['price','location','parking','space','vibe'].forEach(c => renderStars(c, scores[c]));
+  } else {
+    document.getElementById('modal-title').textContent = 'Add Apartment';
+    ['f-url','f-name','f-hood','f-price','f-sqft','f-bedbath','f-parking','f-notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('f-status').value = 'considering';
+    document.getElementById('fetch-status').textContent = '';
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+  loadApiKey();
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+function overlayClose(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ---- API KEY ----
+function saveApiKey() {
+  const key = document.getElementById('f-apikey').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('apikey-status').innerHTML = '<span style="color:var(--rust)">Doesn\'t look right — key should start with sk-ant-</span>';
+    return;
+  }
+  localStorage.setItem('anthropic-key', key);
+  document.getElementById('apikey-status').innerHTML = '<span style="color:var(--sage);font-weight:600">✓ Key saved!</span>';
+}
+
+function loadApiKey() {
+  const key = localStorage.getItem('anthropic-key') || '';
+  const input = document.getElementById('f-apikey');
+  if (input && key) {
+    input.value = key;
+    document.getElementById('apikey-status').innerHTML = '✓ Key loaded. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--gold)">Change →</a>';
+  }
+}
+
+// ---- FETCH LISTING (AI-powered) ----
+async function fetchListing() {
+  const url = document.getElementById('f-url').value.trim();
+  if (!url) return;
+
+  const apiKey = localStorage.getItem('anthropic-key') || document.getElementById('f-apikey').value.trim();
+  if (!apiKey) {
+    document.getElementById('fetch-status').innerHTML = '<div class="fetching-msg" style="color:var(--rust)">⚠ Paste your Anthropic API key above and hit Save first.</div>';
+    document.getElementById('f-apikey').focus();
+    return;
+  }
+
+  const btn = document.getElementById('fetch-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+  document.getElementById('fetch-status').innerHTML = '<div class="fetching-msg">Analyzing listing with AI...</div>';
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        system: `You are a real estate data extractor. When given a Zillow or apartment listing URL, search for it and extract the following details. Respond ONLY with a valid JSON object (no markdown, no extra text) with these fields:
+{
+  "name": "short descriptive address or listing name",
+  "hood": "neighborhood name",
+  "price": number (monthly rent, digits only),
+  "sqft": number (square footage, digits only),
+  "bedbath": "X bed / Y bath",
+  "parking": "describe parking situation or 'Unknown'"
+}
+If you cannot find a value, use null.`,
+        messages: [{ role: "user", content: `Please fetch and extract apartment details from this listing: ${url}` }]
+      })
+    });
+
+    const data = await response.json();
+    // Find text block in response
+    const textBlock = data.content && data.content.find(c => c.type === 'text');
+    if (!textBlock) throw new Error('No text response');
+
+    const clean = textBlock.text.replace(/```json|```/g, '').trim();
+    const info = JSON.parse(clean);
+
+    if (info.name) document.getElementById('f-name').value = info.name;
+    if (info.hood) document.getElementById('f-hood').value = info.hood;
+    if (info.price) document.getElementById('f-price').value = info.price;
+    if (info.sqft) document.getElementById('f-sqft').value = info.sqft;
+    if (info.bedbath) document.getElementById('f-bedbath').value = info.bedbath;
+    if (info.parking) document.getElementById('f-parking').value = info.parking;
+
+    document.getElementById('fetch-status').innerHTML = '<div class="fetch-success">✓ Details pulled in! Review and adjust as needed.</div>';
+  } catch (err) {
+    document.getElementById('fetch-status').innerHTML = '<div class="fetching-msg">Couldn\'t auto-fill — enter details manually.</div>';
+    console.error(err);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Auto-fill ✦';
+}
+function clearFetchStatus() {
+  document.getElementById('fetch-status').textContent = '';
+}
+
+// ---- SAVE ----
+function saveApartment() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Please give this apartment a name.'); return; }
+
+  const apt = {
+    id: editingId !== null ? editingId : Date.now(),
+    url: document.getElementById('f-url').value.trim(),
+    name,
+    hood: document.getElementById('f-hood').value.trim(),
+    price: document.getElementById('f-price').value,
+    sqft: document.getElementById('f-sqft').value,
+    bedbath: document.getElementById('f-bedbath').value.trim(),
+    parking: document.getElementById('f-parking').value.trim(),
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    scores: {...scores},
+    added: editingId !== null ? apartments.find(a=>a.id===editingId).added : new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})
+  };
+
+  if (editingId !== null) {
+    apartments = apartments.map(a => a.id === editingId ? apt : a);
+  } else {
+    apartments.push(apt);
+  }
+
+  localStorage.setItem('chi-apts', JSON.stringify(apartments));
+  closeModal();
+  renderAll();
+}
+
+// ---- DELETE ----
+function deleteApt(id) {
+  if (!confirm('Remove this apartment?')) return;
+  apartments = apartments.filter(a => a.id !== id);
+  localStorage.setItem('chi-apts', JSON.stringify(apartments));
+  renderAll();
+}
+
+// ---- STATUS CYCLE ----
+function cycleStatus(id) {
+  const apt = apartments.find(a => a.id === id);
+  const cycle = ['considering', 'favorite', 'eliminated'];
+  apt.status = cycle[(cycle.indexOf(apt.status) + 1) % cycle.length];
+  localStorage.setItem('chi-apts', JSON.stringify(apartments));
+  renderAll();
+}
+
+// ---- RENDER ----
+function totalScore(apt) {
+  const s = apt.scores || {};
+  return (s.price||0) + (s.location||0) + (s.parking||0) + (s.space||0) + (s.vibe||0);
+}
+
+function aptCardHTML(apt) {
+  const s = apt.scores || {};
+  const cats = [
+    { key:'price', label:'Price Value', cls:'score-color-1' },
+    { key:'location', label:'Location', cls:'score-color-2' },
+    { key:'parking', label:'Parking', cls:'score-color-3' },
+    { key:'space', label:'Space', cls:'score-color-4' },
+    { key:'vibe', label:'Vibe', cls:'score-color-5' },
+  ];
+  const scoreRows = cats.map(c => {
+    const v = s[c.key] || 0;
+    return `<div class="score-row">
+      <div class="score-label">${c.label}</div>
+      <div class="score-bar-bg"><div class="score-bar-fill ${c.cls}" style="width:${v*20}%"></div></div>
+      <div class="score-num">${v || '—'}</div>
+    </div>`;
+  }).join('');
+
+  const total = totalScore(apt);
+  const badgeCls = apt.status === 'favorite' ? 'badge-favorite' : apt.status === 'eliminated' ? 'badge-eliminated' : 'badge-considering';
+  const badgeLabel = apt.status === 'favorite' ? '⭐ Favorite' : apt.status === 'eliminated' ? '✕ Eliminated' : '· Considering';
+
+  const zillowLink = apt.url ? `<a href="${apt.url}" target="_blank" class="zillow-link">🔗 View Listing</a>` : '';
+
+  return `<div class="apt-card" id="card-${apt.id}">
+    <div class="apt-card-header">
+      <div>
+        <div class="apt-name">${apt.name}</div>
+        ${apt.hood ? `<div style="font-size:0.78rem;color:var(--muted);margin-top:2px">📍 ${apt.hood}</div>` : ''}
+        ${zillowLink}
+      </div>
+      <div class="apt-status-badge ${badgeCls}">${badgeLabel}</div>
+    </div>
+    <div class="apt-meta">
+      <div class="meta-item"><div class="meta-label">Monthly Rent</div><div class="meta-value price">${apt.price ? '$'+Number(apt.price).toLocaleString()+'/mo' : '—'}</div></div>
+      <div class="meta-item"><div class="meta-label">Size</div><div class="meta-value">${apt.sqft ? apt.sqft+' sq ft' : '—'}</div></div>
+      <div class="meta-item"><div class="meta-label">Beds / Baths</div><div class="meta-value">${apt.bedbath || '—'}</div></div>
+      <div class="meta-item"><div class="meta-label">Parking</div><div class="meta-value">${apt.parking || '—'}</div></div>
+    </div>
+    <div class="apt-scores">
+      <div class="scores-title">Ratings</div>
+      ${scoreRows}
+      ${total > 0 ? `<div class="total-score">Total score: ${total} / 25</div>` : ''}
+    </div>
+    <div class="apt-notes">
+      <div class="notes-label">Notes</div>
+      ${apt.notes ? `<div class="notes-text">${apt.notes}</div>` : '<div class="notes-empty">No notes yet.</div>'}
+    </div>
+    <div class="apt-actions">
+      <button class="action-btn primary" onclick="openModal(${apt.id})">Edit</button>
+      <button class="action-btn" onclick="cycleStatus(${apt.id})">Change Status</button>
+      <button class="action-btn danger" onclick="deleteApt(${apt.id})">Remove</button>
+    </div>
+  </div>`;
+}
+
+function renderList(containerId, filter) {
+  const container = document.getElementById(containerId);
+  let list = apartments;
+  if (filter && filter !== 'all') list = apartments.filter(a => a.status === filter);
+  if (list.length === 0) {
+    container.innerHTML = '';
+    return false;
+  }
+  list = [...list].sort((a,b) => totalScore(b) - totalScore(a));
+  container.innerHTML = list.map(aptCardHTML).join('');
+  return true;
+}
+
+function renderCompare() {
+  const a = document.getElementById('compare-a').value;
+  const b = document.getElementById('compare-b').value;
+  const out = document.getElementById('compare-output');
+
+  if (!a || !b) { out.innerHTML = '<div class="no-compare">Select two apartments to compare them side by side.</div>'; return; }
+  if (a === b) { out.innerHTML = '<div class="no-compare">Please select two different apartments.</div>'; return; }
+
+  const aptA = apartments.find(x => x.id == a);
+  const aptB = apartments.find(x => x.id == b);
+
+  const rows = [
+    { label: 'Rent', va: aptA.price ? '$'+Number(aptA.price).toLocaleString()+'/mo' : '—', vb: aptB.price ? '$'+Number(aptB.price).toLocaleString()+'/mo' : '—', winner: aptA.price && aptB.price ? (Number(aptA.price) < Number(aptB.price) ? 'a' : 'b') : null },
+    { label: 'Sq Ft', va: aptA.sqft ? aptA.sqft+' sq ft' : '—', vb: aptB.sqft ? aptB.sqft+' sq ft' : '—', winner: aptA.sqft && aptB.sqft ? (Number(aptA.sqft) > Number(aptB.sqft) ? 'a' : 'b') : null },
+    { label: 'Beds/Baths', va: aptA.bedbath || '—', vb: aptB.bedbath || '—', winner: null },
+    { label: 'Parking', va: aptA.parking || '—', vb: aptB.parking || '—', winner: null },
+    { label: 'Neighborhood', va: aptA.hood || '—', vb: aptB.hood || '—', winner: null },
+    { label: 'Price Score', va: (aptA.scores?.price||0)+'/5', vb: (aptB.scores?.price||0)+'/5', winner: (aptA.scores?.price||0) > (aptB.scores?.price||0) ? 'a' : (aptA.scores?.price||0) < (aptB.scores?.price||0) ? 'b' : null },
+    { label: 'Location Score', va: (aptA.scores?.location||0)+'/5', vb: (aptB.scores?.location||0)+'/5', winner: (aptA.scores?.location||0) > (aptB.scores?.location||0) ? 'a' : (aptA.scores?.location||0) < (aptB.scores?.location||0) ? 'b' : null },
+    { label: 'Parking Score', va: (aptA.scores?.parking||0)+'/5', vb: (aptB.scores?.parking||0)+'/5', winner: (aptA.scores?.parking||0) > (aptB.scores?.parking||0) ? 'a' : (aptA.scores?.parking||0) < (aptB.scores?.parking||0) ? 'b' : null },
+    { label: 'Space Score', va: (aptA.scores?.space||0)+'/5', vb: (aptB.scores?.space||0)+'/5', winner: (aptA.scores?.space||0) > (aptB.scores?.space||0) ? 'a' : (aptA.scores?.space||0) < (aptB.scores?.space||0) ? 'b' : null },
+    { label: 'Vibe Score', va: (aptA.scores?.vibe||0)+'/5', vb: (aptB.scores?.vibe||0)+'/5', winner: (aptA.scores?.vibe||0) > (aptB.scores?.vibe||0) ? 'a' : (aptA.scores?.vibe||0) < (aptB.scores?.vibe||0) ? 'b' : null },
+    { label: 'Total Score', va: totalScore(aptA)+'/25', vb: totalScore(aptB)+'/25', winner: totalScore(aptA) > totalScore(aptB) ? 'a' : totalScore(aptA) < totalScore(aptB) ? 'b' : null, bold: true },
+  ];
+
+  const rowHTML = rows.map(r => `<tr>
+    <td>${r.label}</td>
+    <td class="${r.winner === 'a' ? 'winner' : ''}">${r.bold ? '<strong>'+r.va+'</strong>' : r.va}</td>
+    <td class="${r.winner === 'b' ? 'winner' : ''}">${r.bold ? '<strong>'+r.vb+'</strong>' : r.vb}</td>
+  </tr>`).join('');
+
+  out.innerHTML = `<div style="overflow-x:auto">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th style="width:35%"></th>
+          <th>${aptA.name}</th>
+          <th>${aptB.name}</th>
+        </tr>
+      </thead>
+      <tbody>${rowHTML}</tbody>
+    </table>
+  </div>
+  <div style="margin-top:12px;font-size:0.75rem;color:var(--sage);font-weight:600">✦ Green = winner in that category</div>`;
+}
+
+function populateCompareSelects() {
+  ['compare-a','compare-b'].forEach(id => {
+    const sel = document.getElementById(id);
+    const val = sel.value;
+    sel.innerHTML = '<option value="">Select...</option>';
+    apartments.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.name;
+      sel.appendChild(opt);
+    });
+    sel.value = val;
+  });
+  renderCompare();
+}
+
+function renderAll() {
+  const showed = renderList('apt-list', currentFilter);
+  document.getElementById('empty-state').style.display = showed ? 'none' : 'block';
+
+  const showedFav = renderList('fav-list', 'favorite');
+  document.getElementById('fav-empty').style.display = showedFav ? 'none' : 'block';
+
+  populateCompareSelects();
+}
+
+// ---- TABS + FILTERS ----
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('view-list').style.display = tab === 'list' ? '' : 'none';
+  document.getElementById('view-favorites').style.display = tab === 'favorites' ? '' : 'none';
+  document.getElementById('view-compare').style.display = tab === 'compare' ? '' : 'none';
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderList('apt-list', f);
+  const showed = apartments.filter(a => f === 'all' || a.status === f).length > 0;
+  document.getElementById('empty-state').style.display = showed ? 'none' : 'block';
+}
+
+// ---- INIT ----
+buildStars();
+renderAll();
+loadApiKey();
+</script>
+</body>
+</html>
