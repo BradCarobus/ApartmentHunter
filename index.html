@@ -139,6 +139,23 @@
   }
   .apt-card:hover { box-shadow: var(--shadow-lg); }
 
+  .apt-photos {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    height: 180px;
+  }
+  .apt-photos::-webkit-scrollbar { display: none; }
+  .apt-photos img {
+    height: 180px;
+    width: auto;
+    min-width: 240px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .apt-photos img:first-child { border-radius: 0; }
+
   .apt-card-header {
     padding: 16px 18px 12px;
     display: flex;
@@ -800,9 +817,10 @@ async function fetchListing() {
   "price": number (monthly rent, digits only),
   "sqft": number (square footage, digits only),
   "bedbath": "X bed / Y bath",
-  "parking": "describe parking situation or 'Unknown'"
+  "parking": "describe parking situation or 'Unknown'",
+  "images": ["url1", "url2", "url3"]
 }
-If you cannot find a value, use null.`,
+For images, extract up to 3 direct photo URLs from the listing (the actual image src URLs, not page links). If you cannot find a value, use null. If no images found, use an empty array for images.`,
         messages: [{ role: "user", content: `Please fetch and extract apartment details from this listing: ${url}` }]
       })
     });
@@ -822,6 +840,7 @@ If you cannot find a value, use null.`,
     if (info.sqft) document.getElementById('f-sqft').value = info.sqft;
     if (info.bedbath) document.getElementById('f-bedbath').value = info.bedbath;
     if (info.parking) document.getElementById('f-parking').value = info.parking;
+    if (info.images && info.images.length) window._fetchedImages = info.images;
 
     document.getElementById('fetch-status').innerHTML = '<div class="fetch-success">✓ Details pulled in! Review and adjust as needed.</div>';
   } catch (err) {
@@ -853,8 +872,10 @@ function saveApartment() {
     status: document.getElementById('f-status').value,
     notes: document.getElementById('f-notes').value.trim(),
     scores: {...scores},
+    images: editingId !== null ? (apartments.find(a=>a.id===editingId).images || []) : (window._fetchedImages || []),
     added: editingId !== null ? apartments.find(a=>a.id===editingId).added : new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})
   };
+  window._fetchedImages = null;
 
   if (editingId !== null) {
     apartments = apartments.map(a => a.id === editingId ? apt : a);
@@ -914,7 +935,12 @@ function aptCardHTML(apt) {
 
   const zillowLink = apt.url ? `<a href="${apt.url}" target="_blank" class="zillow-link">🔗 View Listing</a>` : '';
 
+  const photoStrip = apt.images && apt.images.length
+    ? `<div class="apt-photos">${apt.images.map(src => `<img src="${src}" alt="photo" loading="lazy" onerror="this.style.display='none'">`).join('')}</div>`
+    : '';
+
   return `<div class="apt-card" id="card-${apt.id}">
+    ${photoStrip}
     <div class="apt-card-header">
       <div>
         <div class="apt-name">${apt.name}</div>
