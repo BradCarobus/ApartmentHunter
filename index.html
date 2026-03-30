@@ -790,7 +790,7 @@ async function fetchListing() {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 1000,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         system: `You are a real estate data extractor. When given a Zillow or apartment listing URL, search for it and extract the following details. Respond ONLY with a valid JSON object (no markdown, no extra text) with these fields:
@@ -810,10 +810,11 @@ If you cannot find a value, use null.`,
     const data = await response.json();
     // Find text block in response
     const textBlock = data.content && data.content.find(c => c.type === 'text');
-    if (!textBlock) throw new Error('No text response');
+    if (!textBlock) throw new Error('No text response: ' + JSON.stringify(data));
 
-    const clean = textBlock.text.replace(/```json|```/g, '').trim();
-    const info = JSON.parse(clean);
+    const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in response: ' + textBlock.text);
+    const info = JSON.parse(jsonMatch[0]);
 
     if (info.name) document.getElementById('f-name').value = info.name;
     if (info.hood) document.getElementById('f-hood').value = info.hood;
