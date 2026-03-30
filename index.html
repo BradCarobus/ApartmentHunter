@@ -6,6 +6,21 @@
 <title>Our Chicago Apartment Hunt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDnmVEBSCkQf7E_pd4K9u9k1SH_6j3BdmQ",
+    authDomain: "apartmenthunter-54beb.firebaseapp.com",
+    projectId: "apartmenthunter-54beb",
+    storageBucket: "apartmenthunter-54beb.firebasestorage.app",
+    messagingSenderId: "700515450757",
+    appId: "1:700515450757:web:3f76522c60325a5b6f8eec",
+    measurementId: "G-CX849KXYZX"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
 <style>
   :root {
     --ink: #1a1a2e;
@@ -654,7 +669,7 @@ if(sessionStorage.getItem("chi-unlocked")==="1"){document.getElementById("lock-s
 
 <script>
 // ---- STATE ----
-let apartments = JSON.parse(localStorage.getItem('chi-apts') || '[]');
+let apartments = [];
 let editingId = null;
 let currentTab = 'list';
 let currentFilter = 'all';
@@ -846,7 +861,7 @@ function saveApartment() {
     apartments.push(apt);
   }
 
-  localStorage.setItem('chi-apts', JSON.stringify(apartments));
+  db.collection('apartments').doc(String(apt.id)).set(apt);
   closeModal();
   renderAll();
 }
@@ -855,7 +870,7 @@ function saveApartment() {
 function deleteApt(id) {
   if (!confirm('Remove this apartment?')) return;
   apartments = apartments.filter(a => a.id !== id);
-  localStorage.setItem('chi-apts', JSON.stringify(apartments));
+  db.collection('apartments').doc(String(id)).delete();
   renderAll();
 }
 
@@ -864,7 +879,7 @@ function cycleStatus(id) {
   const apt = apartments.find(a => a.id === id);
   const cycle = ['considering', 'favorite', 'eliminated'];
   apt.status = cycle[(cycle.indexOf(apt.status) + 1) % cycle.length];
-  localStorage.setItem('chi-apts', JSON.stringify(apartments));
+  db.collection('apartments').doc(String(apt.id)).update({ status: apt.status });
   renderAll();
 }
 
@@ -1036,8 +1051,11 @@ function setFilter(f, el) {
 
 // ---- INIT ----
 buildStars();
-renderAll();
 loadApiKey();
+db.collection('apartments').onSnapshot(snapshot => {
+  apartments = snapshot.docs.map(doc => doc.data());
+  renderAll();
+});
 </script>
 </body>
 </html>
